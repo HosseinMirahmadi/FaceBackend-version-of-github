@@ -1,52 +1,22 @@
-name: Deploy FaceBackend
-
-on:
-  push:
-    branches:
-      - main
-      - master
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install sshpass
-        run: |
-          sudo apt update
-          sudo apt install -y sshpass
-
-      - name: Deploy to server
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_PASS: ${{ secrets.SSH_PASS }}
-        run: |
-          sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
-
-            echo "Connected to server"
-
-            cd /home/ping_api/ping_api_github/FaceBackend-version-of-github || exit 1
-
-            echo "Pulling latest code..."
-            git fetch origin
-            git pull
-
-            echo "Stopping containers..."
-            docker compose down
-
-            echo "Building containers..."
-            docker compose build --no-cache
-
-            echo "Starting containers..."
-            docker compose up -d
-
-            echo "Cleaning docker system..."
-            docker system prune -f
-
-            echo "Deploy finished successfully"
-
-          EOF
+- name: Deploy to server
+  env:
+    SSH_HOST: ${{ secrets.SSH_HOST }}
+    SSH_USER: ${{ secrets.SSH_USER }}
+    SSH_PASS: ${{ secrets.SSH_PASS }}
+  run: |
+    sshpass -p "$SSH_PASS" ssh -tt -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "
+      echo 'Connected to server' &&
+      cd /home/ping_api/ping_api_github/FaceBackend-version-of-github || exit 1 &&
+      echo 'Pulling latest code...' &&
+      git fetch origin &&
+      git pull &&
+      echo 'Stopping containers...' &&
+      docker compose down &&
+      echo 'Building containers...' &&
+      docker compose build --no-cache &&
+      echo 'Starting containers...' &&
+      docker compose up -d &&
+      echo 'Cleaning docker system...' &&
+      docker system prune -f &&
+      echo 'Deploy finished successfully'
+    "
