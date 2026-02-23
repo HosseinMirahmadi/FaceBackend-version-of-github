@@ -1,22 +1,35 @@
-- name: Deploy to server
-  env:
-    SSH_HOST: ${{ secrets.SSH_HOST }}
-    SSH_USER: ${{ secrets.SSH_USER }}
-    SSH_PASS: ${{ secrets.SSH_PASS }}
-  run: |
-    sshpass -p "$SSH_PASS" ssh -tt -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "
-      echo 'Connected to server' &&
-      cd /home/ping_api/ping_api_github/FaceBackend-version-of-github || exit 1 &&
-      echo 'Pulling latest code...' &&
-      git fetch origin &&
-      git pull &&
-      echo 'Stopping containers...' &&
-      docker compose down &&
-      echo 'Building containers...' &&
-      docker compose build --no-cache &&
-      echo 'Starting containers...' &&
-      docker compose up -d &&
-      echo 'Cleaning docker system...' &&
-      docker system prune -f &&
-      echo 'Deploy finished successfully'
-    "
+name: Deploy to server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_PASS: ${{ secrets.SSH_PASS }}
+
+    steps:
+      - name: Deploy to server
+        run: |
+          sshpass -p "$SSH_PASS" ssh -tt -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" << 'EOF'
+            echo 'Connected to server'
+            cd /home/ping_api/ping_api_github/FaceBackend-version-of-github || exit 1
+            echo 'Pulling latest code...'
+            git fetch origin
+            git pull
+            echo 'Stopping containers...'
+            docker compose down
+            echo 'Building containers...'
+            docker compose build --no-cache
+            echo 'Starting containers...'
+            docker compose up -d
+            echo 'Cleaning docker system...'
+            docker system prune -f
+            echo 'Deploy finished successfully'
+          EOF
