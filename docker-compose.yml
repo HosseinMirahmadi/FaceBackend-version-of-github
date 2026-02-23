@@ -1,6 +1,18 @@
 version: "3.9"
 
 services:
+  nginx:
+    image: nginx:latest
+    container_name: ping_api_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx-conf/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - face_backend
+    restart: always
+
   face_backend:
     container_name: face_backend
     build:
@@ -18,11 +30,7 @@ services:
       - mongo
 
   mongo:
-<<<<<<< HEAD
     image: mongo:6
-=======
-    image: mongo:7
->>>>>>> 78ff324b2d9bce681aae1b7c2aad269eece7b8bf
     container_name: mongo
     restart: always
     ports:
@@ -34,4 +42,3 @@ services:
 
 volumes:
   mongo_data:
-
